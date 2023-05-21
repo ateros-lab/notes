@@ -5,10 +5,15 @@
 </head>
 <body>
 
+  <div id="computer-preview">
+    <h1>You need a smartphone to use this app</h1>
+    <img src="qr-code.png">
+  </div>
+
   <div id="install-screen">
     <img src="note.png">
     <p>Приложение для создания и редактирования заметок.<br />
-      <a href="https://www.youtube.com/@_ateros">Ссылка на урок</a>
+      <a href="https://youtu.be/8mO2ikXyQ84">Ссылка на урок</a>
     </p>
     <div>
       <i id="install-icon" class="material-icons shadow-icon">file_download</i>
@@ -151,6 +156,24 @@
       }
       #main-screen {
         display: block;
+      }
+    }
+    /* COMPUTER PREVIEW */
+    #computer-preview {
+      display: none;
+      margin-top: 5vh;
+      width: 100%;
+      text-align: center;
+    }
+    #computer-preview img {
+      width: 30%
+    }
+    @media (min-width: 992px ) {
+      #computer-preview {
+        display: block;
+      }
+      #install-screen {
+        display: none;
       }
     }
   </style>
