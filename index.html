@@ -1,0 +1,301 @@
+<head>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+</head>
+<body>
+
+  <div id="install-screen">
+    <img src="note.png">
+    <p>Приложение для создания и редактирования заметок.<br />
+      <a href="https://www.youtube.com/@_ateros">Ссылка на урок</a>
+    </p>
+    <div>
+      <i id="install-icon" class="material-icons shadow-icon">file_download</i>
+    </div>
+  </div>
+
+  <div id="main-screen">
+    <span id="main-info">Все заметки</span>
+    <span id="notes-count"></span>
+    <table>
+      <tbody>     
+      </tbody>
+    </table>
+    <i id="add-note-icon" class="material-icons shadow-icon" onclick="addNoteIconClick()">add</i>
+  </div>
+
+  <div id="edit-screen">
+    <i id="back-icon" class="material-icons" onclick="backIconClick()">arrow_back_ios</i>
+    <input type="text" placeholder="Название" onchange="saveNote()">
+    <hr/>
+    <textarea onchange="saveNote()"></textarea>
+  </div>
+
+  <style>
+    body {
+      font-family: Arial;
+    }
+    /* MAIN SCREEN */
+    #main-screen {
+      display: none;
+    }
+    table {
+      font-size: xx-large;
+      width: 100%;
+      margin-top: 15%;
+      float: left;
+    }
+    tbody > tr {
+      width: 100%;
+    }
+    #main-info, #notes-count {
+      font-size: xx-large;
+      float: left;
+      width: 100%;
+      margin-top: 50%;
+      text-align: center;
+    }
+    #notes-count {
+      margin-top: 2.5%;
+      color: grey;
+      font-size: x-large;
+      font-weight: lighter;
+    }
+    .shadow-icon {
+      border-radius: 50%;
+      padding: 4.5%;
+      color: #ff3d12;
+      box-shadow: 0px 5px 10px rgba(135, 135, 135, 0.5);
+    }
+    #add-note-icon {
+      font-size: xx-large;
+      position: absolute;
+      top: 720px;
+      right: 30px;
+    }
+    .note-title {
+      font-size: x-large;
+      padding-left: 2.5%;
+      width: 90%;
+      padding-top: 6.5%;
+    }
+    .note-del-icon {
+      padding-top: 6.5%;
+      font-size: xx-large;
+      color: grey;
+    }
+    .note-date {
+      font-size: large;
+      padding-top: 2.5%;
+      float: left;
+      color: grey;
+    }
+    /* EDIT SCREEN */
+    #edit-screen {
+      display: none;
+      margin: 5%;
+      margin-top: 10%;
+      max-width: 100%;
+    }
+    #back-icon {
+      font-size: xx-large;
+      float: left;
+    }
+    input {
+      font-size: xx-large;
+      border: none;
+      outline: none;
+      float: left;
+      width: 80%;
+    }
+    hr {
+      width: 100%;
+      float: left;
+      margin-top: 5%;
+      margin-bottom: 10%;
+      border: 1px solid grey;
+    }
+    textarea {
+      font-size: x-large;
+      font-family: Arial;
+      width: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      height: 100%;
+    }
+    /* INSTALL SCREEN */
+    #install-screen img {
+      display: block;
+      width: 50%;
+      margin: auto;
+      margin-top: 45%;
+    }
+    #install-screen p {
+      font-size: x-large;
+      width: 100%;
+      text-align: center;
+    }
+    #install-screen div {
+      width: 100%;
+      text-align: center;
+    }
+    #install-screen i {
+      font-size: xx-large;
+      margin: auto;
+    }
+    @media all and (display-mode: fullscreen){
+      #install-screen {
+        display: none;
+      }
+      #main-screen {
+        display: block;
+      }
+    }
+  </style>
+  
+  <script src="https://momentjs.com/downloads/moment-with-locales.js"></script>
+  <script>
+    // Извлечение тегов из разметки
+    let input = window.document.querySelector('input');
+    let textarea = window.document.querySelector('textarea');
+    let mainScreen = window.document.querySelector('#main-screen');
+    let editScreen = window.document.querySelector('#edit-screen');
+    let notesCount = window.document.querySelector('#notes-count');
+    let tableBody = window.document.querySelector('tbody');
+    let installIcon = window.document.querySelector('#install-icon');
+
+    //Переменные
+    let noteList = [];
+    let noteId = -1;
+
+    // Функции
+    const removeNoteFromList = (id) => {
+      noteList.map((elem, index) => {
+        if(elem.id === id) noteList.splice(index, 1);
+      });
+      window.localStorage.setItem('noteList', JSON.stringify(noteList));
+      window.location.reload();
+    }
+    const goToEdit = () => {
+      mainScreen.style.display = 'none';
+      editScreen.style.display = 'block';
+      noteList.map(elem => {
+        if(elem.id === noteId){
+          input.value = elem.title;
+          textarea.value = elem.text;
+        }
+      });
+      textarea.focus();
+    }
+    const createNewTableRow = (id, noteTitle, noteDate) => {
+      // <tr>
+      //   <td class="note-title">
+      //     Название
+      //     <br/>
+      //     <span class="note-date">May 15, 2023</span>
+      //   </td>
+      //   <td>
+      //     <i class="material-icons note-del-icon">delete_outlined</i>
+      //   </td>
+      // </tr>
+      // Создание тегов
+      let row = window.document.createElement('tr');
+      let titleColumn = window.document.createElement('td');
+      let delColumn = window.document.createElement('td');
+      let delIcon = window.document.createElement('i');
+      let date = window.document.createElement('span');
+      // Установка классов
+      titleColumn.className = 'note-title';
+      date.className = 'note-date';
+      delIcon.className = 'material-icons note-del-icon';
+      // Установка содержимого
+      date.innerText = noteDate;
+      delIcon.innerText = 'delete_outlined';
+      titleColumn.innerText = noteTitle;
+      // Обработчики событий
+      titleColumn.addEventListener('click', () => {
+        noteId = id;
+        goToEdit();
+      });
+      delColumn.addEventListener('click', () => removeNoteFromList(id));
+      // Добавление элементов
+      delColumn.appendChild(delIcon);
+      titleColumn.appendChild(window.document.createElement('br'));
+      titleColumn.appendChild(date);
+      row.appendChild(titleColumn);
+      row.appendChild(delColumn);
+      tableBody.appendChild(row);
+    }
+    const onLoad = () => {
+      noteList = window.localStorage.getItem('noteList')
+        ? JSON.parse(window.localStorage.getItem('noteList'))
+        : [];
+      notesCount.innerText = `Заметок ${noteList.length}`;
+      if(noteList) {
+        noteList.map(elem => {
+          createNewTableRow(elem.id, elem.title, elem.date);
+        });
+      }
+    }
+    onLoad();
+
+    // Утилиты для обработчиков
+    const getTitleSlice = (title, strLength = 20) => {
+      if(title.length > strLength)
+        return `${title.substr(0, strLength)}...`;
+      else return title;      
+    }
+    const updateNote = () => {
+      // Обновление заметки по noteId
+      noteList.map(elem => {
+        if(elem.id === noteId){
+          elem.title = getTitleSlice(input.value);
+          elem.text = textarea.value;
+        }
+      })
+    }
+    const createNewNote = () => {
+      let date = moment(new Date());
+      let object = {
+        id: noteList.length,
+        title: input.value
+          ? getTitleSlice(input.value)
+          : getTitleSlice(textarea.value)
+        ,
+        text: textarea.value,
+        date: date.format('LL'),
+      }
+      noteList.push(object);
+    }
+    // Обработчики событий
+    const backIconClick = () => {
+      editScreen.style.display = 'none';
+      mainScreen.style.display = 'block';
+      noteId = -1;
+      window.location.reload();
+    }
+    const saveNote = () => {
+      if(textarea.value){
+        if(noteId < 0) createNewNote();
+        else updateNote();
+        window.localStorage.setItem('noteList', JSON.stringify(noteList));
+      }
+    }
+    const addNoteIconClick = () => {
+      mainScreen.style.display = 'none';
+      editScreen.style.display = 'block';
+    }
+  
+    // Установка
+    let defaultInstallEvent = null;
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      defaultInstallEvent = event;
+    })
+    installIcon.addEventListener('click', (event) => {
+      defaultInstallEvent.prompt();
+    })
+  </script>
+</body>
